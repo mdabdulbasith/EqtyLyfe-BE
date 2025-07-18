@@ -57,10 +57,20 @@ app.post("/api/chat", async (req, res) => {
     });
 
     const data = await response.json();
-    const botReply = data.choices?.[0]?.message?.content || "Sorry, I couldn't get a response.";
+
+    // Log and handle API errors properly
+    if (!response.ok) {
+      console.error("Groq API error:", data);
+      return res.status(response.status).json({
+        error: data.error?.message || "Failed to get a response from Groq API",
+      });
+    }
+
+    const botReply =
+      data.choices?.[0]?.message?.content || "No response from Groq model.";
     res.status(200).json({ reply: botReply });
   } catch (error) {
-    console.error("Chatbot API error:", error);
+    console.error("Chatbot server error:", error);
     res.status(500).json({ error: "Internal server error" });
   }
 });
