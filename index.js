@@ -16,7 +16,7 @@ const PORT = process.env.PORT || 5000;
 
 // CORS configuration
 const corsOptions = {
-  origin: ["http://localhost:5173", "https://your-frontend-domain.com"], // allow frontend URLs
+  origin: ["http://localhost:5173", "https://eqty-lyfe.vercel.app/"], // allow frontend URLs
   methods: ["GET", "POST"],
   allowedHeaders: ["Content-Type"],
 };
