@@ -12,17 +12,15 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const app = express();
-const PORT = process.env.PORT || 5000;
+const PORT = process.env.PORT || 10000;
 
-// Proper CORS configuration
-app.use(cors({
-  origin: ["http://localhost:5173", "https://your-frontend-domain.com"],
+// Enable CORS for local and production
+const corsOptions = {
+  origin: ["http://localhost:5173", "https://eqtylyfe-frontend.vercel.app"],
   methods: ["GET", "POST", "OPTIONS"],
   allowedHeaders: ["Content-Type"],
-}));
-
-app.options("*", cors()); // handle preflight requests
-
+};
+app.use(cors(corsOptions));
 app.use(express.json());
 
 // Health check
@@ -38,12 +36,15 @@ app.post("/api/chat", async (req, res) => {
       return res.status(400).json({ error: "Message is required" });
     }
 
-    const systemPrompt = fs.readFileSync(path.join(__dirname, "systemPrompt.txt"), "utf8");
+    const systemPrompt = fs.readFileSync(
+      path.join(__dirname, "systemPrompt.txt"),
+      "utf8"
+    );
 
     const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
       method: "POST",
       headers: {
-        "Authorization": `Bearer ${process.env.GROQ_API_KEY}`,
+        Authorization: `Bearer ${process.env.GROQ_API_KEY}`,
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
@@ -65,5 +66,5 @@ app.post("/api/chat", async (req, res) => {
 });
 
 app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
+  console.log(`✅ Server running on port ${PORT}`);
 });
