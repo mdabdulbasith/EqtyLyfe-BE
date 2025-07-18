@@ -16,7 +16,7 @@ const PORT = process.env.PORT || 10000;
 
 // Enable CORS for local and production
 const corsOptions = {
-  origin: ["http://localhost:5173", "https://eqtylyfe-frontend.vercel.app"],
+  origin: ["https://eqtylyfe-frontend.vercel.app"],
   methods: ["GET", "POST", "OPTIONS"],
   allowedHeaders: ["Content-Type"],
 };
