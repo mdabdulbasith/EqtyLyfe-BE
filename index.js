@@ -15,14 +15,12 @@ const app = express();
 const PORT = process.env.PORT || 10000;
 
 // Enable CORS for local and production
-const corsOptions = {
-  origin: ["https://eqty-lyfe.vercel.app"], // match your actual frontend domain
-  methods: ["GET", "POST", "OPTIONS"],
-  allowedHeaders: ["Content-Type"],
-};
+app.use(cors({
+  origin: ['https://eqty-lyfe.vercel.app'],
+  methods: ['GET', 'POST', 'OPTIONS'],
+  allowedHeaders: ['Content-Type'],
+}));
 
-app.use(cors(corsOptions));
-app.options("*", cors(corsOptions));
 app.use(express.json());
 
 // Health check
