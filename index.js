@@ -1,8 +1,8 @@
-import express from "express";
-import fetch from "node-fetch";
-import dotenv from "dotenv";
-import fs from "fs";
 import cors from "cors";
+import express from "express";
+import dotenv from "dotenv";
+import fetch from "node-fetch";
+import fs from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
 
@@ -14,16 +14,18 @@ const __dirname = path.dirname(__filename);
 const app = express();
 const PORT = process.env.PORT || 5000;
 
-// CORS configuration
-const corsOptions = {
-  origin: ["http://localhost:5173", "https://eqty-lyfe.vercel.app/"], // allow frontend URLs
-  methods: ["GET", "POST"],
+// Proper CORS configuration
+app.use(cors({
+  origin: ["http://localhost:5173", "https://your-frontend-domain.com"],
+  methods: ["GET", "POST", "OPTIONS"],
   allowedHeaders: ["Content-Type"],
-};
-app.use(cors(corsOptions));
+}));
+
+app.options("*", cors()); // handle preflight requests
+
 app.use(express.json());
 
-// Health check endpoint
+// Health check
 app.get("/", (req, res) => {
   res.send("Chatbot backend is running!");
 });
@@ -36,9 +38,7 @@ app.post("/api/chat", async (req, res) => {
       return res.status(400).json({ error: "Message is required" });
     }
 
-    // Load system prompt from file
-    const systemPromptPath = path.join(__dirname, "systemPrompt.txt");
-    const systemPrompt = fs.readFileSync(systemPromptPath, "utf8");
+    const systemPrompt = fs.readFileSync(path.join(__dirname, "systemPrompt.txt"), "utf8");
 
     const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
       method: "POST",
@@ -57,7 +57,6 @@ app.post("/api/chat", async (req, res) => {
 
     const data = await response.json();
     const botReply = data.choices?.[0]?.message?.content || "Sorry, I couldn't get a response.";
-
     res.status(200).json({ reply: botReply });
   } catch (error) {
     console.error("Chatbot API error:", error);
@@ -65,7 +64,6 @@ app.post("/api/chat", async (req, res) => {
   }
 });
 
-// Start server
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
 });
