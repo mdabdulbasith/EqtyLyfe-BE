@@ -1,38 +1,24 @@
-import cors from "cors";
 import express from "express";
-import dotenv from "dotenv";
 import fetch from "node-fetch";
 import fs from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
+import dotenv from "dotenv";
 
 dotenv.config();
+
+const router = express.Router();
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-const app = express();
-const PORT = process.env.PORT || 10000;
-
-// Enable CORS for local and production
-app.use(
-  cors({
-    origin: ['https://eqty-lyfe.vercel.app'], // change to ["http://localhost:5173"] for local testing
-    // origin: ['http://localhost:5173'],
-    methods: ['GET', 'POST', 'OPTIONS'],
-    allowedHeaders: ['Content-Type'],
-  })
-);
-
-app.use(express.json());
-
 // Health check
-app.get("/", (req, res) => {
+router.get("/", (req, res) => {
   res.send("Chatbot backend is running with OpenAI!");
 });
 
 // Chat endpoint
-app.post("/api/chat", async (req, res) => {
+router.post("/chat", async (req, res) => {
   try {
     const { message } = req.body;
     if (!message) {
@@ -40,7 +26,7 @@ app.post("/api/chat", async (req, res) => {
     }
 
     const systemPrompt = fs.readFileSync(
-      path.join(__dirname, "systemPrompt.txt"),
+      path.join(__dirname, "../systemPrompt.txt"),
       "utf8"
     );
 
@@ -51,7 +37,7 @@ app.post("/api/chat", async (req, res) => {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        model: "gpt-4o-mini", // or "gpt-4o-mini" for cheaper & faster
+        model: "gpt-4o-mini",
         messages: [
           { role: "system", content: systemPrompt },
           { role: "user", content: message },
@@ -77,6 +63,4 @@ app.post("/api/chat", async (req, res) => {
   }
 });
 
-app.listen(PORT, () => {
-  console.log(`✅ Server running on port ${PORT}`);
-});
+export default router;
