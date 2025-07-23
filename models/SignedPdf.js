@@ -1,7 +1,8 @@
 import mongoose from 'mongoose';
 
 const signedPdfSchema = new mongoose.Schema({
-  url: { type: String, required: true },
+  clientSignedUrl: { type: String, required: true }, // client-signed document
+  adminSignedUrl: { type: String },                  // added later by admin
   uploadedAt: { type: Date, default: Date.now },
 });
 

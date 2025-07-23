@@ -29,10 +29,12 @@ mongoose
 
 // Schema for signed PDFs
 const signedPdfSchema = new mongoose.Schema({
-  url: { type: String, required: true },
+  clientSignedUrl: { type: String, required: true },
+  adminSignedUrl: { type: String }, // optional
   uploadedAt: { type: Date, default: Date.now },
 });
 const SignedPdf = mongoose.model("SignedPdf", signedPdfSchema);
+
 
 // Schema for finalized submissions
 const finalizedSubmissionSchema = new mongoose.Schema({
@@ -138,7 +140,7 @@ app.post("/api/upload-signed-pdf", upload.single("file"), async (req, res) => {
 
   const fileUrl = `${req.protocol}://${req.get("host")}/uploads/${req.file.filename}`;
   try {
-    const signedPdf = new SignedPdf({ url: fileUrl });
+    const signedPdf = new SignedPdf({ clientSignedUrl: fileUrl });
     await signedPdf.save();
 
     res.status(200).json({ success: true, url: fileUrl });
@@ -187,13 +189,16 @@ app.delete("/api/signed-pdfs/:id", async (req, res) => {
       return res.status(404).json({ success: false, message: "PDF not found" });
     }
 
-    // Delete the file from the uploads folder
-    const filePath = path.join(__dirname, "uploads", path.basename(pdf.url));
-    fs.unlink(filePath, (err) => {
-      if (err) {
-        console.error("Failed to delete file from folder:", err);
-        // Don't return here; proceed to delete from DB anyway
-      }
+    // Delete both client-signed and admin-signed files if they exist
+    const filesToDelete = [pdf.clientSignedUrl, pdf.adminSignedUrl].filter(Boolean);
+
+    filesToDelete.forEach((fileUrl) => {
+      const filePath = path.join(__dirname, "uploads", path.basename(fileUrl));
+      fs.unlink(filePath, (err) => {
+        if (err) {
+          console.error(`Failed to delete file: ${filePath}`, err);
+        }
+      });
     });
 
     // Delete from MongoDB
@@ -205,6 +210,40 @@ app.delete("/api/signed-pdfs/:id", async (req, res) => {
     res.status(500).json({ success: false, message: "Failed to delete signed PDF" });
   }
 });
+
+
+app.post("/api/upload-admin-signed-pdf/:id", upload.single("file"), async (req, res) => {
+  if (!req.file) return res.status(400).json({ success: false, message: "No file uploaded" });
+
+  const fileUrl = `${req.protocol}://${req.get("host")}/uploads/${req.file.filename}`;
+  try {
+    const updatedPdf = await SignedPdf.findByIdAndUpdate(
+      req.params.id,
+      { adminSignedUrl: fileUrl },
+      { new: true }
+    );
+    if (!updatedPdf) return res.status(404).json({ success: false, message: "PDF not found" });
+
+    res.json({ success: true, url: fileUrl });
+  } catch (err) {
+    res.status(500).json({ success: false, message: "Failed to update PDF" });
+  }
+});
+
+// Get a single signed PDF by ID
+app.get("/api/signed-pdfs/:id", async (req, res) => {
+  try {
+    const pdf = await SignedPdf.findById(req.params.id);
+    if (!pdf) {
+      return res.status(404).json({ success: false, message: "PDF not found" });
+    }
+    res.status(200).json(pdf);
+  } catch (err) {
+    console.error("Error fetching signed PDF:", err);
+    res.status(500).json({ success: false, message: "Failed to fetch signed PDF" });
+  }
+});
+
 
 
 app.listen(PORT, () => {
