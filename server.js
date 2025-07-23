@@ -8,12 +8,16 @@ import { fileURLToPath } from "url";
 import multer from "multer";
 import mongoose from "mongoose";
 
+
+
+
 dotenv.config();
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const app = express();
+app.set("trust proxy", 1);
 const PORT = process.env.PORT || 5000;
 
 console.log("MONGODB_URI:", process.env.MONGODB_URI);
